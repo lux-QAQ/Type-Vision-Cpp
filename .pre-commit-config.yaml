@@ -1,0 +1,21 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0  # Use the ref you want to point at
+    hooks:
+      - id: trailing-whitespace
+        types_or: [markdown]  # 仅处理文本文件
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=10000']  # 限制添加的文件大小为 10000KB
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-illegal-windows-names
+      - id: check-case-conflict
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v20.1.6       # 指定你希望使用的 clang-format 版本
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]   # 仅格式化相关语言文件
+
+  

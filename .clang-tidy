@@ -1,0 +1,66 @@
+Checks: >
+  -*,
+  clang-analyzer-*,
+  clang-diagnostic-*,clang-diagnostic-implicit-fallthrough,
+  readability-identifier-naming,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  bugprone-*,
+  google-*,
+  hicpp-*,
+  misc-*,
+  readability-*,
+  -modernize-use-trailing-return-type
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: modernize-use-nullptr.NullMacros
+    value: 'MY_NULL'
+
+      # 内存和指针相关检查
+  - key:             bugprone-dangling-handle
+    value:           'true'  # 检测悬挂的句柄/引用，防止使用已释放的内存。
+  - key:             bugprone-use-after-move
+    value:           'true'  # 检测移动后使用对象的错误。
+  - key:             bugprone-sizeof-expression
+    value:           'true'  # 检查 sizeof 表达式中的常见错误。
+  - key:             bugprone-sizeof-container
+    value:           'true'  # 检查对容器使用 sizeof 的错误。
+  - key:             bugprone-suspicious-memory-comparison
+    value:           'true'  # 检测可疑的内存比较操作。
+  - key:             bugprone-suspicious-memset-usage
+    value:           'true'  # 检测 memset 的可疑用法。
+  - key:             bugprone-undefined-memory-manipulation
+    value:           'true'  # 检测未定义的内存操作。
+  - key:             bugprone-shared-ptr-array-mismatch
+    value:           'true'  # 检测 shared_ptr 数组匹配错误。
+  - key:             bugprone-unique-ptr-array-mismatch
+    value:           'true'  # 检测 unique_ptr 数组匹配错误。
+  - key:             bugprone-misplaced-pointer-arithmetic-in-alloc
+    value:           'true'  # 检测分配中错误的指针算术。
+  - key:             bugprone-misplaced-operator-in-strlen-in-alloc
+    value:           'true'  # 检测分配中 strlen 操作符的错误位置。
+
+      # Switch Case 相关检查
+  - key:             bugprone-switch-missing-default-case
+    value:           'true'  # 检查 switch 语句中缺失的 default 分支
+  - key:             bugprone-branch-clone  
+    value:           'true'  # 检测 switch case 中重复的代码分支
+  - key:             hicpp-multiway-paths-covered
+    value:           'true'  # 检查多路径覆盖，包括 fall-through 检测
+  - key:             cppcoreguidelines-avoid-goto
+    value:           'true'  # 避免使用 goto（包括隐式的 fall-through）
+
+  # 额外的 fall-through 相关检查
+  - key:             bugprone-suspicious-semicolon
+    value:           'true'  # 检测可疑的分号（可能遗漏的语句）
+  - key:             readability-misleading-indentation
+    value:           'true'  # 检测误导性的缩进

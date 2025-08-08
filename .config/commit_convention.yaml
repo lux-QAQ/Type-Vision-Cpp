@@ -1,0 +1,18 @@
+# type_vision following commit convention
+commit_types:
+  - feat: 新增功能
+  - fix: 修复问题
+  - docs: 文档变更
+  - style: 代码格式化
+  - perf: 性能优化
+  - test: 测试相关变更
+  - build: 构建相关变更
+  - ci: 持续集成相关变更
+  - refactor: 重构代码
+  - revert: 回滚变更
+  - chore: 日常事务性变更
+scopes:
+  - Main: 主程序
+  - Test: 测试
+  - Git CC: 提交约定
+  
