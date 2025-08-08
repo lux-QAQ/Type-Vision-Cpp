@@ -21,11 +21,11 @@
 namespace type_vision::static_parse
 {
 
-// --- 新增：为 Parser 添加前向声明 ---
+//  为 Parser 添加前向声明
 template <typename T>
 struct Parser;
 
-// --- 现有代码：颜色配置和预设方案 ---
+//  现有代码：颜色配置和预设方案
 struct HighlightConfig
 {
     std::uint32_t type;
@@ -94,7 +94,7 @@ struct StaticFunction;
 // 打印机制
 namespace details
 {
-// --- 新增：编译期枚举反射工具 ---
+//  编译期枚举反射工具
 struct enum_reflection
 {
     template <auto value>
@@ -276,7 +276,7 @@ static std::string format_qualifiers(const std::vector<std::string_view>& qualif
 struct ReflectedMembersPrinter
 {
 private:
-    // --- 修正：将这些成员移到结构体顶层作用域 ---
+    //  将这些成员移到结构体顶层作用域
     template <typename T>
     struct MembersInfo
     {
@@ -322,7 +322,7 @@ public:
                                   << details::colorize(member_names_[Is], config.modifier, enable_color)
                                   << details::colorize(": ", config.tag, enable_color);
 
-                        // 递归打印成员的类型树 (内联打印)
+                        // 递归打印成员的类型树
                         std::vector<std::string_view> member_qualifiers;
                         member_parser.print_impl(prefix, is_last_member, member_qualifiers, true, config, enable_color);
                     }(),
@@ -373,7 +373,7 @@ struct StaticBasicType : StaticTypeCRTP<StaticBasicType<T>>
         std::cout << details::colorize(raw_name_of<T>(), config.type, enable_color)
                   << details::format_qualifiers(qualifiers, config, enable_color);
 
-        // 修正：同时排除 void 和函数类型，避免对它们调用 sizeof
+        // 同时排除 void 和函数类型，避免对它们调用 sizeof
         if constexpr (!std::is_void_v<T> && !std::is_function_v<T>)
         {
             // 仅当 T 不是 void 或函数时，才实例化包含 sizeof 的代码块
@@ -394,13 +394,13 @@ struct StaticBasicType : StaticTypeCRTP<StaticBasicType<T>>
     }
 };
 
-// --- StaticEnum 专门用于打印枚举类型 ---
+//  StaticEnum 专门用于打印枚举类型
 template <typename T>
 struct StaticEnum : StaticTypeCRTP<StaticEnum<T>>
 {
 private:
-    // 1. 将编译期计算结果存储为静态成员变量。
-    //    这样，它们只在编译时计算一次，并成为类型的一部分。
+    // 将编译期计算结果存储为静态成员变量。
+    // 这样，它们只在编译时计算一次，并成为类型的一部分。
     static constexpr auto pairs_info_ = details::enum_reflection::get_enum_pairs<T>();
     static constexpr auto& pairs_ = pairs_info_.first;
     static constexpr auto count_ = pairs_info_.second;
@@ -417,7 +417,7 @@ public:
         std::cout << details::colorize("Enum: ", config.tag, enable_color)
                   << details::colorize(raw_name_of<T>(), config.type, enable_color);
 
-        // 2. 在运行时函数中，直接使用预先计算好的静态成员。
+        // 在运行时函数中，直接使用预先计算好的静态成员。
         if (count_ > 0)
         {
             std::string members_str = " [";
@@ -558,7 +558,7 @@ struct StaticTemplateType : StaticTypeCRTP<StaticTemplateType<T, ParsedArgs...>>
 
         std::string new_prefix = prefix + (is_last ? "    " : "│   ");
 
-        // --- 修正：调整打印逻辑以插入 "Class Members" 标签 ---
+        //  调整打印逻辑以插入 "Class Members" 标签
         constexpr bool has_args = sizeof...(ParsedArgs) > 0;
         constexpr bool is_reflected = std::is_aggregate_v<T> || ylt::reflection::is_ylt_refl_v<T>;
 
@@ -775,7 +775,7 @@ struct StaticUnion : StaticTypeCRTP<StaticUnion<T>>
     }
 };
 
-// --- 修正：将 StaticReflectedStruct 的定义移回到命名空间内部 ---
+//  将 StaticReflectedStruct 的定义移回到命名空间内部
 template <typename T>
 struct StaticReflectedStruct : StaticTypeCRTP<StaticReflectedStruct<T>>
 {
@@ -794,7 +794,7 @@ public:
 
         std::string new_prefix = prefix + (is_last ? "    " : "│   ");
 
-        // --- 修正：调用可复用的打印器 ---
+        //  调用可复用的打印器
         details::ReflectedMembersPrinter::print<T>(new_prefix, config, enable_color);
     }
 };

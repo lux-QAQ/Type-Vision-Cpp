@@ -36,7 +36,7 @@ struct template_parser_helper
 };
 
 // 删除所有手写的 template_parser_helper 特化，
-// 例如从 "// --- 1 个参数 ---" 到 "// 为了简洁..." 的所有内容，
+// 例如从 "//  1 个参数 " 到 "// 为了简洁..." 的所有内容，
 // 然后用下面的 #include 替换。
 
 #include "inc/template_parser_helper.inc"
@@ -58,7 +58,7 @@ struct ParserForTemplate<RawTemplateType, std::tuple<Args...>>
     using type = StaticTemplateType<RawTemplateType, typename Parser<Args>::type...>;
 };
 
-// 基础类型处理 (修正：自动识别聚合类型)
+// 基础类型处理 (自动识别聚合类型)
 template <typename T>
 struct BasicTypeWrapper
 {
@@ -115,7 +115,7 @@ struct Parser<details::value_wrapper<V>>
     using type = StaticValue<V>;
 };
 
-// 新增：用于解析类型包装器的特化
+// 用于解析类型包装器的特化
 template <typename T>
 struct Parser<details::type_wrapper<T>>
 {
@@ -123,7 +123,7 @@ struct Parser<details::type_wrapper<T>>
     using type = typename Parser<T>::type;
 };
 
-// --- 所有其他特化保持不变 ---
+//  所有其他特化保持不变
 
 // 修饰符的特化
 template <typename T>
