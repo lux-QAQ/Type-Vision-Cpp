@@ -1,27 +1,29 @@
 ## Type Vision
 
-简体中文 | [English](README.en.md)
+
+English | [简体中文](README.md)
 
 
-这是一个使用`C++20`编写的类型解析器，旨在提供对`C++`类型的树状可视化 ,受[16bit-ykiko/magic-cpp](https://github.com/16bit-ykiko/magic-cpp)的启发,使用**类型特化**和反射库[yalantinglibs](https://github.com/alibaba/yalantinglibs)来实现类型解析。这使得代码量相比[16bit-ykiko/magic-cpp](https://github.com/16bit-ykiko/magic-cpp)大大减少。
 
-## 功能
-当前的功能特别简单 ,只是用于解析类型并打印出类型的树状结构。
-例如对于
+This is a type parser written in `C++20`, designed to provide a tree-like visualization of `C++` types. Inspired by [16bit-ykiko/magic-cpp](https://github.com/16bit-ykiko/magic-cpp), it uses template specialization and the reflection library [yalantinglibs](https://github.com/alibaba/yalantinglibs) to implement type parsing. This significantly reduces the amount of code compared to [16bit-ykiko/magic-cpp](https://github.com/16bit-ykiko/magic-cpp).
+
+## Features
+Currently, the functionality is very simple: it just parses types and prints their tree structure.
+For example, for a
 ```cpp
 #include "parser.hpp"
 
 int main()
 {
-    using T = int (*(*(*)(int*))[4])(int*); // 复杂的C风格函数指针类型 ,能看懂这个那算是谭浩强受害者了
+    using T = int (*(*(*)(int*))[4])(int*); // A complex C-style function pointer type
     type_vision::static_parse::Parser<T>::type::print();
     return 0;
 }
 ```
-### 输出:
+### Output:
 ![C-choro](public/image-2.png)
 
-或者你可能遇到`std::function`天才代码
+Or you might encounter some "genius" `std::function` code:
 ```cpp
 #include "parser.hpp"
 
@@ -32,15 +34,16 @@ int main()
     return 0;
 }
 ```
-### 输出:
+### Output:
 ![func](public/image.png)
-## 反射带来高级特性
-由于使用了编译器宏和反射库`yalantinglibs` ,所以可以解析出更复杂的类型。
-#### 1. 枚举类型
+
+## Advanced Features via Reflection
+By using compiler macros and the reflection library `yalantinglibs`, more complex types can be parsed.
+
+#### 1. Enum Types
 
 ```cpp
 #include "parser.hpp"
-
 
 enum class Color
 {
@@ -58,17 +61,14 @@ int main()
     return 0;
 }
 ```
-### 输出:
+### Output:
 ![enum](public/image-1.png)
 
-
-
-#### 2. 类对象
-> 满足聚合体的类对象可以被解析
+#### 2. Class Objects
+> Class objects that are aggregate types can be parsed.
 ```cpp
 #include "parser.hpp"
 #include <string>
-
 
 enum class Color
 {
@@ -94,8 +94,8 @@ public:
     std::string getName() const { return name; }
     int getAge() const { return age; }
     int getId() const { return id; }
-
 };
+
 int main()
 {
     using T = Person;
@@ -104,45 +104,43 @@ int main()
 }
 ```
 
-
-### 输出:
+### Output:
 ![alt text](public/image-4.png)
-聚合类对象的要求:
-*   **没有用户声明的构造函数。**
-*   **没有私有或受保护的非静态数据成员。**
-*   没有虚函数。
-*   没有虚、私有或受保护的基类。
+Requirements for an aggregate class object:
+*   **No user-declared constructors.**
+*   **No private or protected non-static data members.**
+*   No virtual functions.
+*   No virtual, private, or protected base classes.
 
-### 3. NTTP的解析
+### 3. Parsing NTTP (Non-Type Template Parameters)
 ```cpp
 #include "parser.hpp"
 #include <string>
+
 template <int N>
 struct Array {
     int data[N];
 };
+
 int main() {
-    using T = Array<5>; // 数组类型
+    using T = Array<5>; // Array type
     type_vision::static_parse::Parser<T>::type::print();
     return 0;
 }
 ```
-### 输出:
+### Output:
 ![nttp](public/image-5.png)
 
-
-
-## 可能的功能列表
-- [x] 支持类型树的可视化
-- [ ] 支持`lambda`表达式的解析
-- [ ] 支持不同类型树的`diff`
-- [ ] 类型树序列化为`json`或者`yaml`
-- [ ] 实现从类型树构造为合法且易懂的C++代码
-- [ ] 使用C++26反射实现更复杂的类解析
-
+## Possible Feature List
+- [x] Support for type tree visualization
+- [ ] Support for parsing `lambda` expressions
+- [ ] Support for `diff`ing different type trees
+- [ ] Serialize type tree to `json` or `yaml`
+- [ ] Implement generation of legal and readable C++ code from a type tree
+- [ ] Use C++26 reflection for more complex class parsing
 
 ## License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. You can view the full license [here](LICENSE).
-根据该License严禁将该项目用于任何商用目的。
+According to this License, any commercial use of this project is strictly prohibited.
 ![CC BY-NC License](https://licensebuttons.net/l/by-nc/4.0/88x31.png)

@@ -14,5 +14,8 @@ commit_types:
 scopes:
   - Main: 主程序
   - Test: 测试
+  - Parser: 解析器
+  - Type_tree: 类型树
+  - Readme: 主文档
   - Git CC: 提交约定
   

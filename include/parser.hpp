@@ -1,6 +1,6 @@
 #pragma once
 // 包含 yalantinglibs 的头文件，is_aggregate_v 在 <type_traits> 中
-#include "yalantinglibs/include/ylt/reflection/user_reflect_macro.hpp"
+#include "ylt/reflection/user_reflect_macro.hpp"
 #include "type_tree.hpp"
 #include <type_traits>
 #include <tuple>
@@ -177,7 +177,7 @@ struct Parser<T C::*>
     using type = StaticMemberDataPointer<typename Parser<C>::type, typename Parser<T>::type>;
 };
 
-// 函数特化... (保持不变)
+// 函数特化
 template <typename R, typename... Args>
 struct Parser<R(Args...)>
 {
@@ -209,14 +209,14 @@ struct Parser<std::function<R(Args...)>>
     using type = typename Parser<R(Args...)>::type;
 };
 
-// 成员函数指针的特化... (保持不变)
+// 成员函数指针的特化
 // 基础形式
 template <typename R, typename C, typename... Args>
 struct Parser<R (C::*)(Args...)>
 {
     using type = StaticMemberFunctionPointer<typename Parser<C>::type, typename Parser<R>::type, std::tuple<typename Parser<Args>::type...>, Qualifiers<false, false, false, false, false>>;
 };
-// ... 其他成员函数指针特化 ...
+//  其他成员函数指针特化
 template <typename R, typename C, typename... Args>
 struct Parser<R (C::*)(Args...) const && noexcept>
 {
