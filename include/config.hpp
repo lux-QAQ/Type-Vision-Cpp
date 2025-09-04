@@ -16,6 +16,6 @@ struct PrintConfig
 };
 
 // 可在运行时修改的全局配置实例。
-inline PrintConfig global_config;
+inline const PrintConfig global_config;
 
 }  // namespace type_vision::static_parse
