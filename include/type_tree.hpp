@@ -75,6 +75,28 @@ constexpr std::string_view raw_name_of()
 #endif
 }
 
+// 新增：编译期名字解析
+struct ParsedName
+{
+    std::string_view full_name;
+    std::string_view ns;
+    std::string_view name;
+};
+
+constexpr ParsedName parse_raw_name(std::string_view full_name)
+{
+    if (auto pos = full_name.rfind("::"); pos != std::string_view::npos)
+    {
+        // 检查是否为模板，如果是，则需要找到匹配的 '<' 之前的部分
+        if (auto template_pos = full_name.find('<'); template_pos != std::string_view::npos && template_pos < pos)
+        {
+            // 这种情况比较复杂，暂时简化处理
+        }
+        return {full_name, full_name.substr(0, pos), full_name.substr(pos + 2)};
+    }
+    return {full_name, {}, full_name};
+}
+
 // 前向声明
 template <typename Pointee>
 struct StaticPointer;
@@ -370,7 +392,15 @@ struct StaticBasicType : StaticTypeCRTP<StaticBasicType<T>>
         {
             std::cout << prefix << (is_last ? "└── " : "├── ");
         }
-        std::cout << details::colorize(raw_name_of<T>(), config.type, enable_color)
+
+        // 修改打印逻辑
+        constexpr auto parsed = parse_raw_name(raw_name_of<T>());
+        if (!parsed.ns.empty())
+        {
+            std::cout << details::colorize(parsed.ns, config.tag, enable_color)
+                      << details::colorize("::", config.tag, enable_color);
+        }
+        std::cout << details::colorize(parsed.name, config.type, enable_color)
                   << details::format_qualifiers(qualifiers, config, enable_color);
 
         // 同时排除 void 和函数类型，避免对它们调用 sizeof
