@@ -6,9 +6,9 @@
 #include <string_view>
 #include <vector>
 #include <type_traits>
-#include <cstdint>  // for std::uint*_t
-#include <cstring>  // for memcpy
-#include <array>    // for std::array
+#include <cstdint>  
+#include <cstring>  
+#include <array>    
 #include <map>
 #include <utility>
 
@@ -34,7 +34,7 @@ struct HighlightConfig
     std::uint32_t builtin;
     std::uint32_t modifier;
     std::uint32_t tag;
-    bool show_size_align = true;  // <-- 新增配置项
+    bool show_size_align = true;  
 };
 
 constexpr static inline HighlightConfig Dark = {
@@ -75,7 +75,7 @@ constexpr std::string_view raw_name_of()
 #endif
 }
 
-// 新增：编译期名字解析
+// 编译期名字解析
 struct ParsedName
 {
     std::string_view full_name;
@@ -105,7 +105,7 @@ struct StaticBasicType;
 template <auto V>
 struct StaticValue;
 template <typename T>
-struct StaticEnum;  // <-- 新增前向声明
+struct StaticEnum;  
 template <typename ClassType, typename MemberType>
 struct StaticMemberDataPointer;
 template <typename ClassType, typename ReturnType, typename ArgsTuple, typename Qualifiers>
@@ -824,7 +824,7 @@ public:
 
         std::string new_prefix = prefix + (is_last ? "    " : "│   ");
 
-        //  调用可复用的打印器
+        //  可复用的打印器
         details::ReflectedMembersPrinter::print<T>(new_prefix, config, enable_color);
     }
 };

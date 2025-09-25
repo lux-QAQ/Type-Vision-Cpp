@@ -63,7 +63,6 @@ enum class MyEnum
     B
 };
 
-// --- 从 README.md 添加的定义 ---
 enum class Color
 {
     Red = 1,
@@ -87,7 +86,7 @@ struct Array
 {
     int data[N];
 };
-// --- 定义结束 ---
+//  定义结束
 
 int main()
 {
@@ -143,7 +142,7 @@ int main()
     using Case19 = int (MyClass::*)(int);
     run_test<Case19>();
 
-    std::cout << "--- README examples ---\n"
+    std::cout << " README examples \n"
               << std::endl;
 
     // 复杂的C风格函数指针类型

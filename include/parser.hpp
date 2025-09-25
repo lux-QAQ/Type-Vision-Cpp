@@ -14,7 +14,7 @@ struct Parser;
 
 namespace details
 {
-// 1. 统一的参数包装器
+// 统一的参数包装器
 // 用于包装非类型模板参数 (NTTP)
 template <auto V>
 struct value_wrapper
@@ -27,7 +27,7 @@ struct type_wrapper
 {
 };
 
-// 2. "魔法"核心：通过大量特化来提取模板参数
+// 通过大量特化来提取模板参数
 // 主模板，用于非模板特化类型
 template <typename T>
 struct template_parser_helper
