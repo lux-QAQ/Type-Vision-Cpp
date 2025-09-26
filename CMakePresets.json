@@ -12,6 +12,18 @@
                 "CMAKE_TOOLCHAIN_FILE": "",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"
             }
+        },
+        {
+            "name": "gc16",
+            "displayName": "GCC 16.0.0 x86_64-pc-linux-gnu",
+            "description": "正在使用编译器: C = /home/eric/software/gcc/gcc-15.1.0/bin/gcc, CXX = /home/eric/software/gcc/gcc-15.1.0/bin/g++",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/home/eric/software/gcc/gcc-15.1.0/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/home/eric/software/gcc/gcc-15.1.0/bin/g++",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
         }
     ]
 }

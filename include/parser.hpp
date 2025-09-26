@@ -170,6 +170,45 @@ struct Parser<T[]>
 {
     using type = StaticArray<typename Parser<T>::type, 0>;
 };
+
+// 为 const 数组添加更具体的特化以解决歧义
+template <typename T, std::size_t N>
+struct Parser<const T[N]>
+{
+    using type = StaticArray<typename Parser<const T>::type, N>;
+};
+
+template <typename T>
+struct Parser<const T[]>
+{
+    using type = StaticArray<typename Parser<const T>::type, 0>;
+};
+
+// 为 volatile 和 const volatile 数组添加特化以解决歧义
+template <typename T, std::size_t N>
+struct Parser<volatile T[N]>
+{
+    using type = StaticArray<typename Parser<volatile T>::type, N>;
+};
+
+template <typename T>
+struct Parser<volatile T[]>
+{
+    using type = StaticArray<typename Parser<volatile T>::type, 0>;
+};
+
+template <typename T, std::size_t N>
+struct Parser<const volatile T[N]>
+{
+    using type = StaticArray<typename Parser<const volatile T>::type, N>;
+};
+
+template <typename T>
+struct Parser<const volatile T[]>
+{
+    using type = StaticArray<typename Parser<const volatile T>::type, 0>;
+};
+
 // 成员数据指针的特化
 template <typename T, typename C>
 struct Parser<T C::*>
@@ -210,17 +249,14 @@ struct Parser<std::function<R(Args...)>>
 };
 
 // 成员函数指针的特化
-// 基础形式
+// 基础形式 (无任何限定符)
 template <typename R, typename C, typename... Args>
 struct Parser<R (C::*)(Args...)>
 {
     using type = StaticMemberFunctionPointer<typename Parser<C>::type, typename Parser<R>::type, std::tuple<typename Parser<Args>::type...>, Qualifiers<false, false, false, false, false>>;
 };
-//  其他成员函数指针特化
-template <typename R, typename C, typename... Args>
-struct Parser<R (C::*)(Args...) const && noexcept>
-{
-    using type = StaticMemberFunctionPointer<typename Parser<C>::type, typename Parser<R>::type, std::tuple<typename Parser<Args>::type...>, Qualifiers<true, false, false, true, true>>;
-};
+
+// 包含由脚本生成的所有其他限定符组合
+#include "inc/member_function_parser.inc"
 
 }  // namespace type_vision::static_parse

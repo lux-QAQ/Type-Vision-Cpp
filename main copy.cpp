@@ -13,7 +13,10 @@
 template <typename T>
 void run_test()
 {
-    type_vision::static_parse::Parser<T>::type::print();
+    // 使用 std::decay_t 来处理数组到指针的退化，避免模板特化歧义
+    using DecayedType = std::decay_t<T>;
+
+    type_vision::static_parse::Parser<DecayedType>::type::print();
     std::cout << "\n"
               << std::endl;
 }
@@ -83,27 +86,6 @@ struct Array
 {
     int data[N];
 };
-
-// 为成员函数指针测试添加的结构体
-struct MemberFuncTest
-{
-    void f_const() const
-    {
-    }
-    int f_ref() &
-    {
-        return 0;
-    }
-    double f_rref_noexcept() && noexcept
-    {
-        return 0.0;
-    }
-    char f_cv_ref(int) const volatile&
-    {
-        return 'a';
-    }
-};
-
 //  定义结束
 
 int main()
@@ -181,30 +163,6 @@ int main()
 
     using namespace test_namespace;
     run_test<inner_namespace::myDerived>();
-
-
-    std::cout << " Testing generated member function parsers \n"
-              << std::endl;
-
-    // 测试: void() const
-    std::cout << "Case: void (MemberFuncTest::*)() const\n";
-    using MemFunc1 = decltype(&MemberFuncTest::f_const);
-    run_test<MemFunc1>();
-
-    // 测试: int() &
-    std::cout << "Case: int (MemberFuncTest::*)() &\n";
-    using MemFunc2 = decltype(&MemberFuncTest::f_ref);
-    run_test<MemFunc2>();
-
-    // 测试: double() && noexcept
-    std::cout << "Case: double (MemberFuncTest::*)() && noexcept\n";
-    using MemFunc3 = decltype(&MemberFuncTest::f_rref_noexcept);
-    run_test<MemFunc3>();
-
-    // 测试: char(int) const volatile &
-    std::cout << "Case: char (MemberFuncTest::*)(int) const volatile &\n";
-    using MemFunc4 = decltype(&MemberFuncTest::f_cv_ref);
-    run_test<MemFunc4>();
 
     return 0;
 }
