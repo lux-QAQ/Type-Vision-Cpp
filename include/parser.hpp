@@ -14,6 +14,78 @@ struct Parser;
 
 namespace details
 {
+// =================================================================
+// ====================== Lambda 解析逻辑 ==========================
+// =================================================================
+
+// 1. 类型萃取：判断 T 是否为 Lambda
+template <typename T, typename = void>
+struct is_lambda : std::false_type
+{
+};
+
+template <typename T>
+struct is_lambda<T, std::void_t<decltype(&T::operator())>> : std::true_type
+{
+};
+
+
+
+
+
+template <typename T>
+constexpr bool is_lambda_v = is_lambda<std::remove_cvref_t<T>>::value;
+
+// 2. 辅助模板：用于拆解 operator() 的类型
+template <typename T>
+struct lambda_signature_parser;
+
+// 基础形式 (无任何限定符) - 这是我们唯一需要手动定义的
+template <typename R, typename C, typename... Args>
+struct lambda_signature_parser<R (C::*)(Args...)>
+{
+    using return_type = R;
+    using args_tuple = std::tuple<Args...>;
+    static constexpr bool is_const = false;
+    static constexpr bool is_volatile = false;
+    static constexpr bool is_lvalue_ref = false;
+    static constexpr bool is_rvalue_ref = false;
+    static constexpr bool is_noexcept = false;
+};
+
+// 包含由脚本生成的所有其他限定符组合
+#include "inc/lambda_signature_parser.inc"
+
+// 3. 主 Lambda 解析器，负责构建 StaticLambda 节点
+template <typename T>
+struct LambdaParser
+{
+private:
+    using signature_parser = details::lambda_signature_parser<decltype(&T::operator())>;
+    using return_type = typename signature_parser::return_type;
+    using args_tuple = typename signature_parser::args_tuple;
+
+    // 递归地解析返回类型
+    using parsed_return_type = typename Parser<return_type>::type;
+
+    // 递归地解析所有参数类型，并将结果打包成一个 std::tuple
+    template <typename Tuple, size_t... Is>
+    static auto parse_args_helper(std::index_sequence<Is...>)
+    {
+        return std::tuple<typename Parser<std::tuple_element_t<Is, Tuple>>::type...>{};
+    }
+    using parsed_args_tuple = decltype(parse_args_helper<args_tuple>(std::make_index_sequence<std::tuple_size_v<args_tuple>>{}));
+
+public:
+    // 最终构建出的类型树节点 - 传递所有解析出的限定符
+    using type = StaticLambda<T, parsed_return_type, parsed_args_tuple,
+                              signature_parser::is_const,
+                              signature_parser::is_volatile,
+                              signature_parser::is_lvalue_ref,
+                              signature_parser::is_rvalue_ref,
+                              signature_parser::is_noexcept>;
+};
+
 // 统一的参数包装器
 // 用于包装非类型模板参数 (NTTP)
 template <auto V>
@@ -45,6 +117,33 @@ struct template_parser_helper
 template <typename T>
 using template_info = template_parser_helper<T>;
 
+// 新增：用于延迟实例化的基础类型选择器
+template <typename T, bool is_lambda>
+struct BasicTypeSelector;
+
+// is_lambda 为 true 的特化
+template <typename T>
+struct BasicTypeSelector<T, true>
+{
+    using type = typename LambdaParser<T>::type;
+};
+
+// is_lambda 为 false 的特化
+template <typename T>
+struct BasicTypeSelector<T, false>
+{
+    using type = std::conditional_t<
+            (std::is_aggregate_v<T> && !std::is_array_v<T>) || ylt::reflection::is_ylt_refl_v<T>,
+            StaticReflectedStruct<T>,
+            std::conditional_t<
+                    std::is_enum_v<T>,
+                    StaticEnum<T>,
+                    std::conditional_t<
+                            std::is_union_v<T>,
+                            StaticUnion<T>,
+                            StaticBasicType<T>>>>;
+};
+
 }  // namespace details
 
 // 模板类型的解析器 (无需改变)
@@ -65,20 +164,8 @@ struct BasicTypeWrapper
     // 移除 T 的 const/volatile/引用 修饰，以便 is_aggregate_v 能正确工作
     using clean_t = std::remove_cvref_t<T>;
 
-    using type = std::conditional_t<
-            // 1. 优先检查是否为聚合类型 (或手动反射的类型)
-            (std::is_aggregate_v<clean_t> && !std::is_array_v<clean_t>) || ylt::reflection::is_ylt_refl_v<clean_t>,
-            StaticReflectedStruct<clean_t>,
-            // 2. 如果不是，再检查是否为枚举
-            std::conditional_t<
-                    std::is_enum_v<clean_t>,
-                    StaticEnum<clean_t>,
-                    // 3. 如果还不是，再检查是否为联合
-                    std::conditional_t<
-                            std::is_union_v<clean_t>,
-                            StaticUnion<clean_t>,
-                            // 4. 最后回退到普通基础类型
-                            StaticBasicType<clean_t>>>>;
+    // 使用 BasicTypeSelector 来延迟实例化，避免编译错误
+    using type = typename details::BasicTypeSelector<clean_t, details::is_lambda_v<clean_t>>::type;
 };
 
 // 主解析器的分派器 (无需改变)

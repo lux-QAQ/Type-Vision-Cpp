@@ -84,6 +84,7 @@ struct Array
     int data[N];
 };
 
+
 // 为成员函数指针测试添加的结构体
 struct MemberFuncTest
 {
@@ -98,7 +99,7 @@ struct MemberFuncTest
     {
         return 0.0;
     }
-    char f_cv_ref(int) const volatile&
+    char f_cv_ref(int a) const volatile&
     {
         return 'a';
     }
@@ -108,6 +109,8 @@ struct MemberFuncTest
 
 int main()
 {
+
+    
     // 基础类型
     using Case1 = int;
     run_test<Case1>();
@@ -127,7 +130,7 @@ int main()
     // 数组
     using Case7 = int[10];
     run_test<Case7>();
-    using Case8 = const char[];  // 会被 decay 为 const char*
+    using Case8 = const char[];
     run_test<Case8>();
     using Case9 = decltype(arr_ret<int, 5>());
     run_test<Case9>();
@@ -160,9 +163,6 @@ int main()
     using Case19 = int (MyClass::*)(int);
     run_test<Case19>();
 
-    std::cout << " README examples \n"
-              << std::endl;
-
     // 复杂的C风格函数指针类型
     using Case20 = int (*(*(*)(int*))[4])(int*);
     run_test<Case20>();
@@ -183,28 +183,49 @@ int main()
     run_test<inner_namespace::myDerived>();
 
 
-    std::cout << " Testing generated member function parsers \n"
-              << std::endl;
 
-    // 测试: void() const
-    std::cout << "Case: void (MemberFuncTest::*)() const\n";
-    using MemFunc1 = decltype(&MemberFuncTest::f_const);
-    run_test<MemFunc1>();
+    // const 成员函数
+    using Case24 = decltype(&MemberFuncTest::f_const);
+    run_test<Case24>();
 
-    // 测试: int() &
-    std::cout << "Case: int (MemberFuncTest::*)() &\n";
-    using MemFunc2 = decltype(&MemberFuncTest::f_ref);
-    run_test<MemFunc2>();
+    // 左值引用限定成员函数
+    using Case25 = decltype(&MemberFuncTest::f_ref);
+    run_test<Case25>();
 
-    // 测试: double() && noexcept
-    std::cout << "Case: double (MemberFuncTest::*)() && noexcept\n";
-    using MemFunc3 = decltype(&MemberFuncTest::f_rref_noexcept);
-    run_test<MemFunc3>();
+    // 右值引用限定且 noexcept 的成员函数
+    using Case26 = decltype(&MemberFuncTest::f_rref_noexcept);
+    run_test<Case26>();
 
-    // 测试: char(int) const volatile &
-    std::cout << "Case: char (MemberFuncTest::*)(int) const volatile &\n";
-    using MemFunc4 = decltype(&MemberFuncTest::f_cv_ref);
-    run_test<MemFunc4>();
+    // const volatile 且左值引用限定的成员函数
+    using Case27 = decltype(&MemberFuncTest::f_cv_ref);
+    run_test<Case27>();
+
+
+    // Case 28: 简单无捕获 Lambda (隐式 const)
+    auto p_simple = [](int, const char*) -> void {};
+    using Case28 = decltype(p_simple);
+    run_test<Case28>();
+
+    // Case 29: 带捕获的 Lambda
+    int x = 10;
+    std::string y = "hello";
+    auto p_capture = [x, &y](bool)
+    { return y + std::to_string(x); };
+    using Case29 = decltype(p_capture);
+    run_test<Case29>();
+
+    // Case 30: mutable 且 noexcept 的 Lambda
+    auto p_mutable_noexcept = [x]() mutable noexcept
+    { x++; };
+    using Case30 = decltype(p_mutable_noexcept);
+    run_test<Case30>();
+
+    // Case 31: 泛型 Lambda (C++14)
+    auto p_generic = [](auto a, auto b)
+    { return a + b; };
+    using Case31 = decltype(p_generic);
+    run_test<Case31>();
+
 
     return 0;
 }

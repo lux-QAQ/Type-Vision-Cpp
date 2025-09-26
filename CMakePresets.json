@@ -24,6 +24,18 @@
                 "CMAKE_CXX_COMPILER": "/home/eric/software/gcc/gcc-15.1.0/bin/g++",
                 "CMAKE_BUILD_TYPE": "Debug"
             }
+        },
+        {
+            "name": "clang",
+            "displayName": "Clang 21.1.0 x86_64-pc-linux-gnu",
+            "description": "正在使用编译器: C = /usr/bin/clang-21, CXX = /usr/bin/clang++-21",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "/usr/bin/clang-21",
+                "CMAKE_CXX_COMPILER": "/usr/bin/clang++-21",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
         }
     ]
 }

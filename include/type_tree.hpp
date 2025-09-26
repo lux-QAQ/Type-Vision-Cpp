@@ -6,9 +6,9 @@
 #include <string_view>
 #include <vector>
 #include <type_traits>
-#include <cstdint>  
-#include <cstring>  
-#include <array>    
+#include <cstdint>
+#include <cstring>
+#include <array>
 #include <map>
 #include <utility>
 
@@ -34,7 +34,7 @@ struct HighlightConfig
     std::uint32_t builtin;
     std::uint32_t modifier;
     std::uint32_t tag;
-    bool show_size_align = true;  
+    bool show_size_align = true;
 };
 
 constexpr static inline HighlightConfig Dark = {
@@ -105,13 +105,15 @@ struct StaticBasicType;
 template <auto V>
 struct StaticValue;
 template <typename T>
-struct StaticEnum;  
+struct StaticEnum;
 template <typename ClassType, typename MemberType>
 struct StaticMemberDataPointer;
 template <typename ClassType, typename ReturnType, typename ArgsTuple, typename Qualifiers>
 struct StaticMemberFunctionPointer;
 template <typename ReturnType, typename ArgsTuple, bool IsNoexcept, bool IsVariadic>
 struct StaticFunction;
+template <typename T, typename ParsedReturnType, typename ParsedArgsTuple, bool IsConst, bool IsVolatile, bool IsLValueRef, bool IsRValueRef, bool IsNoexcept>
+struct StaticLambda;
 
 // 打印机制
 namespace details
@@ -251,6 +253,32 @@ std::string format(std::string_view fmt, Args&&... args)
 #else
 using std::format;
 #endif
+
+
+
+
+inline std::string get_clean_type_name(std::string_view raw_name)
+{
+#if defined(__clang__)
+    // 专门处理 Clang 的 Lambda 名称格式: "(lambda at /path/to/file.cpp:line:col)"
+    if (raw_name.starts_with("(lambda at "))
+    {
+        auto last_slash = raw_name.rfind('/');
+        auto closing_paren = raw_name.rfind(')');
+
+        if (last_slash != std::string_view::npos && closing_paren != std::string_view::npos)
+        {
+            // 提取 "file.cpp:line:col"
+            auto location = raw_name.substr(last_slash + 1, closing_paren - (last_slash + 1));
+            // 返回一个更简洁的格式
+            return std::string("lambda (") + std::string(location) + ")";
+        }
+    }
+#endif
+    // 对于 GCC 或其他情况，直接返回原始名称
+    return std::string(raw_name);
+}
+
 
 template <typename T>
 std::string colorize(T&& text, std::uint32_t color, bool enable_color)
@@ -826,6 +854,78 @@ public:
 
         //  可复用的打印器
         details::ReflectedMembersPrinter::print<T>(new_prefix, config, enable_color);
+    }
+};
+
+
+// Lambda 类型树节点定义 
+template <typename T, typename ParsedReturnType, typename... ParsedArgs, bool IsConst, bool IsVolatile, bool IsLValueRef, bool IsRValueRef, bool IsNoexcept>
+struct StaticLambda<T, ParsedReturnType, std::tuple<ParsedArgs...>, IsConst, IsVolatile, IsLValueRef, IsRValueRef, IsNoexcept>
+    : StaticTypeCRTP<StaticLambda<T, ParsedReturnType, std::tuple<ParsedArgs...>, IsConst, IsVolatile, IsLValueRef, IsRValueRef, IsNoexcept>>
+{
+private:
+    // 将已解析的参数类型打包，以便在 print_impl 中使用
+    static inline const auto parsed_args_ = std::make_tuple(ParsedArgs{}...);
+
+public:
+    static void print_impl(std::string prefix, bool is_last, std::vector<std::string_view>& qualifiers, bool is_inlined, const HighlightConfig& config, bool enable_color)
+    {
+        if (IsConst) qualifiers.push_back("const");
+        if (IsVolatile) qualifiers.push_back("volatile");
+        if (IsLValueRef) qualifiers.push_back("&");
+        if (IsRValueRef) qualifiers.push_back("&&");
+        if (IsNoexcept) qualifiers.push_back("noexcept");
+
+        if (!is_inlined)
+        {
+            std::cout << prefix << (is_last ? "└── " : "├── ");
+        }
+
+        std::cout << details::colorize("Lambda: ", config.tag, enable_color)
+                  << details::colorize(raw_name_of<T>(), config.type, enable_color)
+                  << details::format_qualifiers(qualifiers, config, enable_color) << '\n';
+
+        std::string new_prefix = prefix + (is_last ? "    " : "│   ");
+
+        constexpr bool has_args = sizeof...(ParsedArgs) > 0;
+
+        // FIX: 使用 std::is_empty_v 来安全地检测 Lambda 是否有捕获。
+        // ylt::reflection 库不支持直接反射编译器生成的 Lambda 闭包类型。
+        // 一个有捕获的 Lambda 不是空类，一个无捕获的 Lambda 是空类。
+        constexpr bool has_captures = !std::is_empty_v<T>;
+
+        constexpr bool has_children = has_args || has_captures;
+
+        // 打印返回类型
+        std::cout << new_prefix << (has_children ? "├── " : "└── ") << details::colorize("R: ", config.tag, enable_color);
+        std::vector<std::string_view> ret_qualifiers;
+        ParsedReturnType::print_impl(new_prefix, !has_children, ret_qualifiers, true, config, enable_color);
+
+        // 打印参数
+        if constexpr (has_args)
+        {
+            [&]<size_t... Is>(std::index_sequence<Is...>)
+            {
+                (
+                        [&]()
+                        {
+                            constexpr bool is_last_arg = (Is == sizeof...(Is) - 1);
+                            auto& arg_parser = std::get<Is>(parsed_args_);
+                            std::cout << new_prefix << ((is_last_arg && !has_captures) ? "└── " : "├── ") << details::colorize(std::to_string(Is) + ": ", config.tag, enable_color);
+                            std::vector<std::string_view> arg_qualifiers;
+                            arg_parser.print_impl(new_prefix, (is_last_arg && !has_captures), arg_qualifiers, true, config, enable_color);
+                        }(),
+                        ...);
+            }(std::make_index_sequence<sizeof...(ParsedArgs)>{});
+        }
+
+        // 打印捕获的成员
+        if constexpr (has_captures)
+        {
+            // FIX: 由于无法反射捕获的成员，我们只打印一个提示信息。
+            // 直接调用 ReflectedMembersPrinter 会导致编译失败。
+            std::cout << new_prefix << "└── " << details::colorize("Captures [details unavailable]", config.tag, enable_color) << '\n';
+        }
     }
 };
 

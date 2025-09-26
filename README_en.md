@@ -133,7 +133,7 @@ int main() {
 
 ## Possible Feature List
 - [x] Support for type tree visualization
-- [ ] Support for parsing `lambda` expressions
+- [x] Support for parsing `lambda` expressions
 - [ ] Support for `diff`ing different type trees
 - [ ] Serialize type tree to `json` or `yaml`
 - [ ] Implement generation of legal and readable C++ code from a type tree
